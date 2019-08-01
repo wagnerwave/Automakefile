@@ -1,0 +1,165 @@
+#!/usr/bin/env bash
+##
+## EPITECH PROJECT, 2019
+## Epitech Automakefile
+## File description:
+## Generator of Epitech Makefile
+##
+
+exe=$0
+
+## Function for print
+function write_on_flags()
+{
+    echo -e "${1}\t=\t${2} -I\$(D_INC)\n" >> Makefile
+}
+
+function write_on_make()
+{
+    echo -e "${1}\t=\t${2}\n" >> Makefile
+}
+
+function write_dir()
+{
+    echo -e "${1}\t=\t./${2}" >> Makefile
+}
+
+function write_exe()
+{
+    echo -e "all\t:\t\$(NAME)" >> Makefile
+    echo -e "\n\$(NAME)\t:\t\$(OBJ)" >> Makefile
+    echo -e "\t\t\$(CC) -o \$(NAME) \$(OBJ) \$(CFLAGS) \$(LDFLAGS)\n" >> Makefile
+}
+
+function epitech_header()
+{
+    echo -e "##" >> Makefile
+    echo -e "## EPITECH PROJECT, 2019" >> Makefile
+    echo -e "## Makefile" >> Makefile
+    echo -e "## File description:" >> Makefile
+    echo -e "## Epitech Makefile Generate with Automakefile" >> Makefile
+    echo -e "##\n" >> Makefile
+}
+
+function rules_for_clean()
+{
+    echo -e "clean\t:" >> Makefile
+    echo -e "\t\trm -f \$(OBJ)\n" >> Makefile
+    echo -e "fclean\t:\tclean" >> Makefile
+    echo -e "\t\trm -f \$(NAME)\n" >> Makefile
+    echo -e "re\t:\tclean all\n" >> Makefile
+    echo -e ".PHONY\t:\tall clean fclean re" >> Makefile
+}
+##
+
+## start script
+
+## error gestion if arguement if not valid
+if [ -z $1 ]
+then
+    printf "%s: Arguement invalid." $0
+    exit 84
+else
+    ## config = config file
+    config=$1
+    ## error on error file
+    if [ ! -f $config ]
+    then
+        exit 84
+    fi
+    ## IFS is the delemiter on the config file
+    IFS=";"
+    count=0
+    # read all the file and init value by name
+    while read line
+    do
+        array=($line)
+        if [[ ${array[0]} == "PROJECT_DIR" ]]
+	then
+	    project_directory=${array[1]}
+	elif [[ ${array[0]} == "SOURCES_DIR" ]]
+	then
+	    sources_directory=${array[1]}
+	elif [[ ${array[0]} == "HEADERS_DIR" ]]
+	then
+	    headers_directory=${array[1]}
+	elif [[ ${array[0]} == "LIBS_DIR" ]]
+	then
+	    library_directory=${array[1]}
+	elif [[ ${array[0]} == "EXEC" ]]
+	then
+	    binary_name=${array[1]}
+	elif [[ ${array[0]} == "CC" ]]
+	then
+	    compilation=${array[1]}
+	elif [[ ${array[0]} == "CFLAGS" ]]
+	then
+	    compilation_flags=${array[1]}
+	elif [[ ${array[0]} == "LDFLAGS" ]]
+	then
+	    linking_flags=${array[1]}
+	elif [[ ${array[0]} == "BCK_DIR" ]]
+	then
+	    backup_folder=${array[1]}
+	elif [[ ${array[0]} == "ZIP" ]]
+	then
+	    compression_binary=${array[1]}
+	elif [[ ${array[0]} == "ZIPFLAGS" ]]
+	then
+	    compression_flags=${array[1]}
+	elif [[ ${array[0]} == "UNZIP" ]]
+	then
+	    decompression_binary=${array[1]}
+	elif [[ ${array[0]} == "UNZIPFLAGS" ]]
+	then
+	    decompression_flags=${array[1]}
+	elif [[ ${array[0]} == *.c ]]
+	then
+	    sources[count]=${array[0]}
+	    ((count++))
+	fi
+    done < $config
+    ## if project directory not exist
+    if [ -z $project_directory ]
+    then
+        exit 84
+    fi
+    ## print header
+    epitech_header
+    ## if sources directory is the current directory
+    if [[ $sources_directory == "." ]]
+    then
+        sources_directory="./"
+    fi
+    ## write the directory source
+    write_on_make "D_SRC" "${sources_directory}/"
+    write_dir "D_LIB" $library_directory
+    write_dir "D_INC" $headers_directory
+    write_on_make "NAME" $binary_name
+    ## print all file
+    for ((i=0; $i < $count; i++))
+    do
+        if [ $i == 0 ]
+        then
+            echo -e "SRC\t=\t\$(D_SRC)${sources[$i]}\t\\" >> Makefile
+        else
+            echo -e "\t\t\$(D_SRC)${sources[$i]}\t\\" >> Makefile
+        fi
+    done
+    ## print the stock value
+    write_on_make "\nCC" $compilation
+    write_on_make "OBJ" "\$(SRC:.c=.o)" >> Makefile
+    write_on_flags "CFLAGS" $compilation_flags
+    write_on_make "LDFLAGS" $linking_flags
+    write_on_make "BCK_DIR" $backup_folder
+    write_on_make "ZIP" $compression_binary
+    write_on_make "ZIPFLAGS" $compression_flags
+    write_on_make "UNZIP" $decompression_binary
+    write_on_make "UNZIPFLAGS" $decompression_flags
+    ## print function
+    write_exe
+    rules_for_clean
+fi
+## move makefile to the config directory
+file=$(dirname $config)
+mv Makefile $file 
